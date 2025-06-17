@@ -59,6 +59,11 @@
                     <i class="fas fa-book-open me-2"></i>Cursos
                   </router-link>
                 </li>
+                <li>
+                  <router-link class="dropdown-item" to="/areas">
+                    <i class="fas fa-layer-group me-2"></i>Áreas
+                  </router-link>
+                </li>
               </ul>
             </li>
 

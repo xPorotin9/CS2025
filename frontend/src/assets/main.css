@@ -14,20 +14,47 @@
   font-weight: 500;
 }
 
+/* Botones con colores sólidos */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c5282;
   border: none;
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background-color: #2c7a54;
   border: none;
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  background-color: #dd6b20;
   border: none;
-  color: #333;
+  color: #fff;
+}
+
+.btn-info {
+  background-color: #3182ce;
+  border: none;
+}
+
+/* Contornos de botones en dashboard */
+.btn-outline-primary {
+  color: #667eea;
+  border-color: #667eea;
+}
+
+.btn-outline-success {
+  color: #4facfe;
+  border-color: #4facfe;
+}
+
+.btn-outline-warning {
+  color: #fcb69f;
+  border-color: #fcb69f;
+}
+
+.btn-outline-info {
+  color: #63b3ed;
+  border-color: #63b3ed;
 }
 
 .table th {
@@ -60,14 +87,15 @@
 }
 
 .form-control:focus, .form-select:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  border-color: #2c5282;
+  box-shadow: 0 0 0 0.2rem rgba(44, 82, 130, 0.25);
 }
 
 .shadow-sm {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
 }
 
+/* Colores de texto para iconos en el dashboard */
 .text-primary {
   color: #667eea !important;
 }
@@ -80,16 +108,50 @@
   color: #fcb69f !important;
 }
 
+.text-info {
+  color: #63b3ed !important;
+}
+
+/* Colores sólidos para la mayoría de elementos */
 .bg-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background-color: #2c5282 !important;
 }
 
 .bg-success {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+  background-color: #2c7a54 !important;
 }
 
 .bg-warning {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important;
+  background-color: #dd6b20 !important;
+}
+
+.bg-danger {
+  background-color: #e53e3e !important;
+}
+
+.bg-info {
+  background-color: #3182ce !important;
+}
+
+.bg-secondary {
+  background-color: #718096 !important;
+}
+
+/* Fondos especiales para los círculos en el dashboard */
+.rounded-circle.bg-primary.bg-opacity-10 {
+  background-color: rgba(102, 126, 234, 0.1) !important;
+}
+
+.rounded-circle.bg-success.bg-opacity-10 {
+  background-color: rgba(79, 172, 254, 0.1) !important;
+}
+
+.rounded-circle.bg-warning.bg-opacity-10 {
+  background-color: rgba(252, 182, 159, 0.1) !important;
+}
+
+.rounded-circle.bg-info.bg-opacity-10 {
+  background-color: rgba(99, 179, 237, 0.1) !important;
 }
 
 .navbar-nav .nav-link {

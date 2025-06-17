@@ -55,6 +55,7 @@
                     <th>Código</th>
                     <th>Nombre</th>
                     <th>Plan de Estudio</th>
+                    <th>Área</th>
                     <th>Créditos</th>
                     <th>Horas</th>
                     <th>Tipo</th>
@@ -75,6 +76,13 @@
                     </td>
                     <td>
                       <small>{{ curso.planEstudio.nombre }}</small>
+                    </td>
+                    <td>
+                      <span v-if="curso.area" class="badge bg-secondary">
+                        {{ curso.area.codigo }}
+                      </span>
+                      <small v-if="curso.area" class="d-block text-muted">{{ curso.area.nombre }}</small>
+                      <span v-else class="text-muted">-</span>
                     </td>
                     <td>
                       <span class="badge bg-info">{{ curso.creditos }} créditos</span>
@@ -165,7 +173,18 @@
               </div>
 
               <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Área</label>
+                    <select class="form-select" v-model="form.areaId">
+                      <option :value="null">Sin área asignada</option>
+                      <option v-for="area in areas" :key="area.id" :value="area.id">
+                        {{ area.codigo }} - {{ area.nombre }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
                   <div class="mb-3">
                     <label class="form-label">Código *</label>
                     <input
@@ -177,12 +196,11 @@
                     />
                   </div>
                 </div>
-                <div class="col-md-8">
-                  <div class="mb-3">
-                    <label class="form-label">Nombre *</label>
-                    <input type="text" class="form-control" v-model="form.nombre" required />
-                  </div>
-                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Nombre *</label>
+                <input type="text" class="form-control" v-model="form.nombre" required />
               </div>
 
               <div class="mb-3">
@@ -338,6 +356,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { cursosService } from '@/services/cursos'
 import { planesEstudioService } from '@/services/planesEstudio'
+import { areasService } from '@/services/areas'
 import api from '@/services/api'
 
 export default {
@@ -345,6 +364,7 @@ export default {
   setup() {
     const cursos = ref([])
     const planesEstudio = ref([])
+    const areas = ref([])
     const loading = ref(false)
     const showModal = ref(false)
     const showPrerequisitosModal = ref(false)
@@ -359,6 +379,7 @@ export default {
 
     const form = ref({
       planEstudioId: '',
+      areaId: null,
       codigo: '',
       nombre: '',
       descripcion: '',
@@ -413,6 +434,15 @@ export default {
       }
     }
 
+    const loadAreas = async () => {
+      try {
+        const response = await areasService.getAll()
+        areas.value = response.data.data.filter(a => a.activo)
+      } catch (error) {
+        console.error('Error al cargar áreas')
+      }
+    }
+
     const saveCurso = async () => {
       saving.value = true
       try {
@@ -422,6 +452,13 @@ export default {
         dataToSend.creditos = parseInt(dataToSend.creditos)
         dataToSend.horasTeoricas = parseInt(dataToSend.horasTeoricas)
         dataToSend.horasPracticas = parseInt(dataToSend.horasPracticas)
+        
+        // Manejar areaId
+        if (dataToSend.areaId === null || dataToSend.areaId === '') {
+          dataToSend.areaId = null
+        } else {
+          dataToSend.areaId = parseInt(dataToSend.areaId)
+        }
 
         if (isEditing.value) {
           delete dataToSend.codigo
@@ -442,6 +479,7 @@ export default {
     const editCurso = (curso) => {
       form.value = {
         planEstudioId: curso.planEstudioId,
+        areaId: curso.areaId || null,
         codigo: curso.codigo,
         nombre: curso.nombre,
         descripcion: curso.descripcion || '',
@@ -485,6 +523,7 @@ export default {
       editingId.value = null
       form.value = {
         planEstudioId: '',
+        areaId: null,
         codigo: '',
         nombre: '',
         descripcion: '',
@@ -500,11 +539,13 @@ export default {
     onMounted(() => {
       loadCursos()
       loadPlanesEstudio()
+      loadAreas()
     })
 
     return {
       cursos,
       planesEstudio,
+      areas,
       loading,
       showModal,
       showPrerequisitosModal,

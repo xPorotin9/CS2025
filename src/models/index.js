@@ -14,6 +14,7 @@ const Matricula = require('./Matricula');
 const DetalleMatricula = require('./DetalleMatricula');
 const Pago = require('./Pago');
 const Configuracion = require('./Configuracion');
+const Area = require('./Area');
 
 // Relaciones entre las tablas
 
@@ -91,6 +92,10 @@ DetalleMatricula.belongsTo(Seccion, { foreignKey: 'seccionId', as: 'seccion' });
 Matricula.hasMany(Pago, { foreignKey: 'matriculaId', as: 'pagos' });
 Pago.belongsTo(Matricula, { foreignKey: 'matriculaId', as: 'matricula' });
 
+// Relaciones Area - Curso
+Area.hasMany(Curso, { foreignKey: 'areaId', as: 'cursos' });
+Curso.belongsTo(Area, { foreignKey: 'areaId', as: 'area' });
+
 module.exports = {
   Usuario,
   Facultad,
@@ -103,6 +108,7 @@ module.exports = {
   PeriodoAcademico,
   Seccion,
   Horario,
+  Area,
   Matricula,
   DetalleMatricula,
   Pago,

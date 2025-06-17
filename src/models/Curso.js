@@ -19,6 +19,14 @@ const Curso = sequelize.define('Curso', {
     type: DataTypes.STRING(20),
     allowNull: false
   },
+  areaId: {
+    type: DataTypes.INTEGER,
+    allowNull: true, // Importante: debe permitir null
+    references: {
+      model: 'areas',
+      key: 'id'
+    }
+  },
   nombre: {
     type: DataTypes.STRING(100),
     allowNull: false

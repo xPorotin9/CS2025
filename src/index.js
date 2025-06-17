@@ -20,6 +20,7 @@ const matriculaRoutes = require('./routes/matricula.routes');
 const detalleMatriculaRoutes = require('./routes/detalleMatricula.routes');
 const pagoRoutes = require('./routes/pago.routes');
 const configuracionRoutes = require('./routes/configuracion.routes');
+const areaRoutes = require('./routes/area.routes');
 
 // Inicializar Express
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/matriculas', matriculaRoutes);
 app.use('/api/detalles-matricula', detalleMatriculaRoutes);
 app.use('/api/pagos', pagoRoutes);
 app.use('/api/configuraciones', configuracionRoutes);
+app.use('/api/areas', areaRoutes);
 
 // Ruta raíz
 app.get('/', (req, res) => {

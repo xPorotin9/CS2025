@@ -1,4 +1,4 @@
-const { Curso, PlanEstudio, Prerequisito } = require('../models');
+const { Curso, PlanEstudio, Prerequisito, Area } = require('../models');
 const { Op } = require('sequelize');
 
 // Crear un nuevo curso
@@ -13,7 +13,8 @@ const createCurso = async (req, res) => {
       creditos, 
       horasTeoricas, 
       horasPracticas, 
-      tipo 
+      tipo,
+      areaId
     } = req.body;
 
     // Verificar si existe el plan de estudio
@@ -49,7 +50,8 @@ const createCurso = async (req, res) => {
       creditos,
       horasTeoricas,
       horasPracticas,
-      tipo
+      tipo,
+      areaId
     });
 
     return res.status(201).json({
@@ -88,11 +90,18 @@ const getAllCursos = async (req, res) => {
     
     const cursos = await Curso.findAll({
       where: whereCondition,
-      include: [{
-        model: PlanEstudio,
-        as: 'planEstudio',
-        attributes: ['id', 'nombre', 'codigo']
-      }],
+      include: [
+        {
+          model: PlanEstudio,
+          as: 'planEstudio',
+          attributes: ['id', 'nombre', 'codigo']
+        },
+        {
+          model: Area,
+          as: 'area',
+          attributes: ['id', 'codigo', 'nombre']
+        }
+      ],
       order: [['ciclo', 'ASC'], ['codigo', 'ASC']]
     });
     
@@ -126,13 +135,17 @@ const getCursoById = async (req, res) => {
         {
           model: Prerequisito,
           as: 'prerequisitosRequeridos',
-          include: [
-            {
-              model: Curso,
-              as: 'cursoPrerequisito',
-              attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos']
-            }
-          ]
+          include: [{
+            model: Curso,
+            as: 'cursoPrerequisito',
+            attributes: ['id', 'codigo', 'nombre', 'ciclo']
+          }]
+        },
+        {
+          model: Area,
+          as: 'area',
+          attributes: ['id', 'codigo', 'nombre'],
+          required: false
         }
       ]
     });
@@ -169,8 +182,9 @@ const updateCurso = async (req, res) => {
       creditos, 
       horasTeoricas, 
       horasPracticas, 
-      tipo,
-      activo 
+      tipo, 
+      activo,
+      areaId  // Agregar este campo
     } = req.body;
     
     const curso = await Curso.findByPk(id);
@@ -190,7 +204,8 @@ const updateCurso = async (req, res) => {
       horasTeoricas: horasTeoricas !== undefined ? horasTeoricas : curso.horasTeoricas,
       horasPracticas: horasPracticas !== undefined ? horasPracticas : curso.horasPracticas,
       tipo: tipo || curso.tipo,
-      activo: activo !== undefined ? activo : curso.activo
+      activo: activo !== undefined ? activo : curso.activo,
+      areaId: areaId !== undefined ? areaId : curso.areaId  // Agregar este campo
     });
     
     return res.status(200).json({
@@ -252,6 +267,13 @@ const getCursosByPlanEstudio = async (req, res) => {
     
     const cursos = await Curso.findAll({
       where: whereCondition,
+      include: [
+        {
+          model: Area,
+          as: 'area',
+          attributes: ['id', 'codigo', 'nombre']
+        }
+      ],
       order: [['ciclo', 'ASC'], ['codigo', 'ASC']]
     });
     

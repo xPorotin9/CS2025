@@ -50,6 +50,14 @@ const routes = [
     component: () => import('@/views/Alumnos.vue'),
     meta: { requiresAuth: true },
   },
+
+  {
+  path: '/areas',
+  name: 'Areas',
+  component: () => import('@/views/Areas.vue'),
+  meta: { requiresAuth: true },
+  },
+
 ]
 
 const router = createRouter({

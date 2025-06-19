@@ -27,6 +27,8 @@ Este sistema proporciona una API RESTful para la gestión completa de matrícula
 
 ```bash
 git clone git clone https://github.com/JhosepLS/CS2025.git
+
+git clone -b areas-css --single-branch https://github.com/xPorotin9/CS2025
 cd Matriculas
 ```
 

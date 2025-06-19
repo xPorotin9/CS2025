@@ -58,6 +58,26 @@ const routes = [
   meta: { requiresAuth: true },
   },
 
+  {
+  path: '/matriculas',
+  name: 'Matriculas',
+  component: () => import('@/views/Matriculas.vue'),
+  meta: { requiresAuth: true },
+},
+  {
+  path: '/periodos-academicos',
+  name: 'PeriodosAcademicos',
+  component: () => import('@/views/PeriodosAcademicos.vue'),
+  meta: { requiresAuth: true },
+  },
+  {
+  path: '/secciones',
+  name: 'Secciones',
+  component: () => import('@/views/Secciones.vue'),
+  meta: { requiresAuth: true },
+  },
+
+
 ]
 
 const router = createRouter({

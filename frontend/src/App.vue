@@ -91,6 +91,36 @@
                 </li>
               </ul>
             </li>
+            
+            <!-- Dropdown Matrículas -->
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                data-bs-toggle="dropdown"
+                role="button"
+                aria-expanded="false"
+              >
+                <i class="fas fa-clipboard-list me-1"></i>Matrículas
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <router-link class="dropdown-item" to="/matriculas">
+                    <i class="fas fa-clipboard-list me-2"></i>Gestión de Matrículas
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item" to="/periodos-academicos">
+                    <i class="fas fa-calendar-alt me-2"></i>Periodos Académicos
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item" to="/secciones">
+                    <i class="fas fa-th-list me-2"></i>Secciones y Horarios
+                  </router-link>
+                </li>
+              </ul>
+            </li>
           </ul>
           <!-- Puedes agregar aquí más elementos a la derecha (por ejemplo, logout, usuario, etc.) -->
         </div>

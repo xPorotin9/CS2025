@@ -210,23 +210,37 @@ export default {
     const savePlan = async () => {
       saving.value = true
       try {
+        // Preparar los datos, manejando las fechas vacías
+        const dataToSend = { ...form.value }
+        
+        // Si fechaFin está vacía, enviar null
+        if (!dataToSend.fechaFin || dataToSend.fechaFin === '') {
+          dataToSend.fechaFin = null
+        }
+        
+        // Validar que fechaInicio no esté vacía
+        if (!dataToSend.fechaInicio) {
+          alert('La fecha de inicio es requerida')
+          return
+        }
+        
         if (isEditing.value) {
-          await planesEstudioService.update(editingId.value, form.value)
+          await planesEstudioService.update(editingId.value, dataToSend)
         } else {
-          await planesEstudioService.create(form.value)
+          await planesEstudioService.create(dataToSend)
         }
         closeModal()
         loadPlanes()
       } catch (error) {
-        alert('Error al guardar plan de estudio')
+        alert('Error al guardar plan de estudio: ' + (error.response?.data?.message || error.message))
       } finally {
         saving.value = false
       }
     }
-
     const editPlan = (plan) => {
       form.value = { 
         ...plan,
+        // Manejar las fechas correctamente
         fechaInicio: plan.fechaInicio ? plan.fechaInicio.split('T')[0] : '',
         fechaFin: plan.fechaFin ? plan.fechaFin.split('T')[0] : ''
       }

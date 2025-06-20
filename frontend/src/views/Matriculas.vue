@@ -62,6 +62,7 @@
               <tr>
                 <th>Código</th>
                 <th>Alumno</th>
+                <th>Facultad/Escuela</th>
                 <th>Periodo</th>
                 <th>Fecha</th>
                 <th>Tipo</th>
@@ -80,6 +81,12 @@
                   <strong>{{ matricula.alumno?.usuario?.nombre }} {{ matricula.alumno?.usuario?.apellido }}</strong>
                   <br>
                   <small class="text-muted">{{ matricula.alumno?.codigo }}</small>
+                </td>
+                <td>
+                  <small class="text-muted">
+                    {{ matricula.alumno?.escuela?.facultad?.nombre }}<br>
+                    {{ matricula.alumno?.escuela?.nombre }}
+                  </small>
                 </td>
                 <td>
                   <span class="badge bg-info">{{ matricula.periodoAcademico?.codigo }}</span>
@@ -147,13 +154,18 @@
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Nueva Matrícula</h5>
+            <h5 class="modal-title">
+              <i class="fas fa-plus me-2"></i>Nueva Matrícula
+              <span v-if="step > 1" class="badge bg-primary ms-2">Paso {{ step }} de 3</span>
+            </h5>
             <button type="button" class="btn-close" @click="closeModal"></button>
           </div>
           <div class="modal-body">
             <!-- Paso 1: Seleccionar alumno y periodo -->
             <div v-if="step === 1">
-              <h6 class="mb-3">Paso 1: Seleccionar Alumno y Periodo</h6>
+              <h6 class="mb-3">
+                <i class="fas fa-user-check me-2"></i>Paso 1: Seleccionar Alumno y Periodo
+              </h6>
               <div class="row">
                 <div class="col-md-6">
                   <div class="mb-3">
@@ -165,11 +177,24 @@
                       </option>
                     </select>
                   </div>
+                  
+                  <!-- Información detallada del alumno seleccionado -->
                   <div v-if="alumnoSeleccionado" class="alert alert-info">
-                    <strong>Información del alumno:</strong><br>
-                    Escuela: {{ alumnoSeleccionado.escuela.nombre }}<br>
-                    Plan de Estudio: {{ alumnoSeleccionado.planEstudio.nombre }}<br>
-                    Ciclo Actual: {{ alumnoSeleccionado.cicloActual }}° ciclo
+                    <h6><i class="fas fa-user-graduate me-2"></i>Información del Alumno</h6>
+                    <div class="row">
+                      <div class="col-12">
+                        <strong>Nombre:</strong> {{ alumnoSeleccionado.usuario?.nombre }} {{ alumnoSeleccionado.usuario?.apellido }}<br>
+                        <strong>Código:</strong> {{ alumnoSeleccionado.codigo }}<br>
+                        <strong>Facultad:</strong> {{ alumnoSeleccionado.escuela?.facultad?.nombre }} ({{ alumnoSeleccionado.escuela?.facultad?.codigo }})<br>
+                        <strong>Escuela:</strong> {{ alumnoSeleccionado.escuela?.nombre }} ({{ alumnoSeleccionado.escuela?.codigo }})<br>
+                        <strong>Plan de Estudio:</strong> {{ alumnoSeleccionado.planEstudio?.nombre }}<br>
+                        <strong>Ciclo Actual:</strong> {{ alumnoSeleccionado.cicloActual }}° ciclo<br>
+                        <small class="text-muted mt-2 d-block">
+                          <i class="fas fa-info-circle me-1"></i>
+                          Puede matricularse en cursos hasta el {{ alumnoSeleccionado.cicloActual + 1 }}° ciclo
+                        </small>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="col-md-6">
@@ -187,8 +212,18 @@
                     <select class="form-select" v-model="form.tipoMatricula" required>
                       <option value="">Seleccionar tipo</option>
                       <option value="regular">Regular</option>
-                      <option value="extemporanea">Extemporánea</option>
+                      <option value="extemporanea">Extemporánea (+20% recargo)</option>
                     </select>
+                  </div>
+                  
+                  <!-- Información del periodo seleccionado -->
+                  <div v-if="periodoSeleccionado" class="alert alert-light">
+                    <h6><i class="fas fa-calendar-alt me-2"></i>Información del Periodo</h6>
+                    <strong>Periodo:</strong> {{ periodoSeleccionado.nombre }}<br>
+                    <strong>Estado:</strong> 
+                    <span class="badge" :class="getEstadoClass(periodoSeleccionado.estado)">
+                      {{ getEstadoLabel(periodoSeleccionado.estado) }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -196,105 +231,207 @@
 
             <!-- Paso 2: Seleccionar cursos -->
             <div v-if="step === 2">
-              <h6 class="mb-3">Paso 2: Seleccionar Cursos</h6>
+              <h6 class="mb-3">
+                <i class="fas fa-book-open me-2"></i>Paso 2: Seleccionar Cursos
+                <small class="text-muted">- {{ alumnoSeleccionado?.escuela?.facultad?.nombre }} / {{ alumnoSeleccionado?.escuela?.nombre }}</small>
+              </h6>
+              
               <div class="alert alert-warning mb-3">
-                <i class="fas fa-info-circle me-2"></i>
-                Créditos seleccionados: <strong>{{ creditosSeleccionados }}</strong> / 
-                Máximo permitido: <strong>{{ maxCreditos }}</strong>
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>{{ alumnoSeleccionado?.usuario?.nombre }} {{ alumnoSeleccionado?.usuario?.apellido }}</strong> - Ciclo actual: {{ alumnoSeleccionado?.cicloActual }}°<br>
+                    <small>Créditos seleccionados: <strong>{{ creditosSeleccionados }}</strong> / Máximo permitido: <strong>{{ maxCreditos }}</strong></small>
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <div class="progress" style="height: 8px;">
+                      <div 
+                        class="progress-bar" 
+                        :class="creditosSeleccionados > maxCreditos ? 'bg-danger' : 'bg-primary'"
+                        :style="{ width: Math.min((creditosSeleccionados / maxCreditos) * 100, 100) + '%' }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="table-responsive">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th width="50">
-                        <input type="checkbox" class="form-check-input" @change="toggleAll" v-model="selectAll">
-                      </th>
-                      <th>Código</th>
-                      <th>Curso</th>
-                      <th>Ciclo</th>
-                      <th>Créditos</th>
-                      <th>Sección</th>
-                      <th>Docente</th>
-                      <th>Horario</th>
-                      <th>Vacantes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="seccion in seccionesDisponibles" :key="seccion.id">
-                      <td>
-                        <input 
-                          type="checkbox" 
-                          class="form-check-input"
-                          :value="seccion.id"
-                          v-model="seccionesSeleccionadas"
-                          :disabled="!puedeSeleccionar(seccion)"
-                        >
-                      </td>
-                      <td>{{ seccion.curso.codigo }}</td>
-                      <td>
-                        <strong>{{ seccion.curso.nombre }}</strong>
-                        <span v-if="seccion.curso.prerequisitosRequeridos?.length > 0" class="text-danger ms-2">
-                          <i class="fas fa-exclamation-triangle" title="Tiene prerequisitos"></i>
-                        </span>
-                      </td>
-                      <td>{{ seccion.curso.ciclo }}°</td>
-                      <td>{{ seccion.curso.creditos }}</td>
-                      <td>{{ seccion.nombre }}</td>
-                      <td>{{ seccion.docente?.usuario?.nombre }} {{ seccion.docente?.usuario?.apellido }}</td>
-                      <td>
-                        <small v-for="horario in seccion.horarios" :key="horario.id">
-                          {{ horario.dia }}: {{ formatTime(horario.horaInicio) }}-{{ formatTime(horario.horaFin) }}<br>
-                        </small>
-                      </td>
-                      <td>
-                        <span class="badge" :class="getVacantesClass(seccion)">
-                          {{ seccion.capacidadMaxima - seccion.capacidadActual }}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              <!-- Cursos organizados por ciclo -->
+              <div v-for="ciclo in ciclosOrdenados" :key="ciclo" class="mb-4">
+                <div class="d-flex align-items-center mb-3">
+                  <h6 class="text-primary mb-0 me-3">
+                    <i class="fas fa-layer-group me-2"></i>{{ ciclo }}° Ciclo
+                  </h6>
+                  <span v-if="ciclo === alumnoSeleccionado?.cicloActual" class="badge bg-success">Ciclo Actual</span>
+                  <span v-else-if="ciclo === alumnoSeleccionado?.cicloActual + 1" class="badge bg-warning">Ciclo Siguiente</span>
+                  <span v-else-if="ciclo < alumnoSeleccionado?.cicloActual" class="badge bg-secondary">Ciclo Anterior</span>
+                  <span v-else class="badge bg-danger">No Disponible</span>
+                </div>
+                
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th width="50">
+                          <input type="checkbox" class="form-check-input" disabled>
+                        </th>
+                        <th>Código</th>
+                        <th>Curso</th>
+                        <th>Área</th>
+                        <th>Tipo</th>
+                        <th>Créditos</th>
+                        <th>Sección</th>
+                        <th>Docente</th>
+                        <th>Horario</th>
+                        <th>Vacantes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="seccion in getCursosPorCiclo[ciclo]" :key="seccion.id" 
+                          :class="{ 'table-warning': !puedeSeleccionarCurso(seccion) }">
+                        <td>
+                          <input 
+                            type="checkbox" 
+                            class="form-check-input"
+                            :value="seccion.id"
+                            v-model="seccionesSeleccionadas"
+                            :disabled="!puedeSeleccionarCurso(seccion)"
+                          >
+                        </td>
+                        <td>
+                          <span class="badge bg-dark">{{ seccion.curso.codigo }}</span>
+                        </td>
+                        <td>
+                          <strong>{{ seccion.curso.nombre }}</strong>
+                          <span v-if="seccion.curso.area" class="d-block">
+                            <small class="text-muted">{{ seccion.curso.area.nombre }}</small>
+                          </span>
+                        </td>
+                        <td>
+                          <span v-if="seccion.curso.area" class="badge bg-secondary">
+                            {{ seccion.curso.area.codigo }}
+                          </span>
+                          <span v-else class="text-muted">-</span>
+                        </td>
+                        <td>
+                          <span class="badge" :class="seccion.curso.tipo === 'obligatorio' ? 'bg-primary' : 'bg-warning'">
+                            {{ seccion.curso.tipo }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="badge bg-info">{{ seccion.curso.creditos }}</span>
+                        </td>
+                        <td>{{ seccion.nombre }}</td>
+                        <td>
+                          <small>
+                            {{ seccion.docente?.usuario?.nombre }} {{ seccion.docente?.usuario?.apellido }}
+                          </small>
+                        </td>
+                        <td>
+                          <small v-for="horario in seccion.horarios" :key="horario.id" class="d-block">
+                            {{ horario.dia }}: {{ formatTime(horario.horaInicio) }}-{{ formatTime(horario.horaFin) }}
+                            <span class="text-muted">({{ horario.aula }})</span>
+                          </small>
+                        </td>
+                        <td>
+                          <span class="badge" :class="getVacantesClass(seccion)">
+                            {{ seccion.capacidadMaxima - seccion.capacidadActual }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <!-- Mensaje si no hay cursos disponibles -->
+              <div v-if="seccionesDisponibles.length === 0" class="text-center py-4">
+                <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                <p class="text-muted">No hay secciones disponibles para este alumno en el periodo seleccionado.</p>
+                <p class="text-muted">Verifique que el periodo esté activo y que haya cursos programados para el ciclo del estudiante.</p>
               </div>
             </div>
 
             <!-- Paso 3: Confirmar matrícula -->
             <div v-if="step === 3">
-              <h6 class="mb-3">Paso 3: Confirmar Matrícula</h6>
+              <h6 class="mb-3">
+                <i class="fas fa-check-circle me-2"></i>Paso 3: Confirmar Matrícula
+              </h6>
               
               <div class="row">
                 <div class="col-md-6">
                   <div class="card">
+                    <div class="card-header bg-primary text-white">
+                      <h6 class="mb-0"><i class="fas fa-user me-2"></i>Información del Estudiante</h6>
+                    </div>
                     <div class="card-body">
-                      <h6 class="card-title">Resumen de Matrícula</h6>
                       <p><strong>Alumno:</strong> {{ alumnoSeleccionado?.usuario?.nombre }} {{ alumnoSeleccionado?.usuario?.apellido }}</p>
+                      <p><strong>Código:</strong> {{ alumnoSeleccionado?.codigo }}</p>
+                      <p><strong>Facultad:</strong> {{ alumnoSeleccionado?.escuela?.facultad?.nombre }}</p>
+                      <p><strong>Escuela:</strong> {{ alumnoSeleccionado?.escuela?.nombre }}</p>
+                      <p><strong>Ciclo Actual:</strong> {{ alumnoSeleccionado?.cicloActual }}°</p>
                       <p><strong>Periodo:</strong> {{ periodoSeleccionado?.nombre }}</p>
-                      <p><strong>Tipo:</strong> {{ form.tipoMatricula === 'regular' ? 'Regular' : 'Extemporánea' }}</p>
-                      <p><strong>Total de cursos:</strong> {{ seccionesSeleccionadas.length }}</p>
-                      <p><strong>Total de créditos:</strong> {{ creditosSeleccionados }}</p>
+                      <p><strong>Tipo:</strong> 
+                        <span class="badge" :class="form.tipoMatricula === 'regular' ? 'bg-primary' : 'bg-warning'">
+                          {{ form.tipoMatricula === 'regular' ? 'Regular' : 'Extemporánea' }}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="card">
+                    <div class="card-header bg-success text-white">
+                      <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Resumen Académico y Financiero</h6>
+                    </div>
                     <div class="card-body">
-                      <h6 class="card-title">Costo de Matrícula</h6>
+                      <p><strong>Total de cursos:</strong> {{ seccionesSeleccionadas.length }}</p>
+                      <p><strong>Total de créditos:</strong> {{ creditosSeleccionadas }}</p>
+                      <hr>
                       <p><strong>Costo por crédito:</strong> S/. {{ costoCredito.toFixed(2) }}</p>
                       <p><strong>Subtotal:</strong> S/. {{ (creditosSeleccionados * costoCredito).toFixed(2) }}</p>
+                      <p v-if="form.tipoMatricula === 'extemporanea'" class="text-warning">
+                        <strong>Recargo extemporáneo (20%):</strong> S/. {{ (creditosSeleccionados * costoCredito * 0.2).toFixed(2) }}
+                      </p>
                       <hr>
-                      <h5><strong>Total a pagar:</strong> S/. {{ montoTotal.toFixed(2) }}</h5>
+                      <h5 class="text-success"><strong>Total a pagar:</strong> S/. {{ montoTotal.toFixed(2) }}</h5>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="mt-3">
-                <h6>Cursos seleccionados:</h6>
-                <ul class="list-group">
-                  <li v-for="seccionId in seccionesSeleccionadas" :key="seccionId" class="list-group-item">
-                    {{ getCursoInfo(seccionId) }}
-                  </li>
-                </ul>
+              <div class="mt-4">
+                <h6><i class="fas fa-list me-2"></i>Cursos seleccionados por ciclo:</h6>
+                <div v-for="ciclo in ciclosOrdenados" :key="ciclo">
+                  <template v-if="getCursosSeleccionadosPorCiclo(ciclo).length > 0">
+                    <h6 class="text-primary mt-3">
+                      <i class="fas fa-layer-group me-2"></i>{{ ciclo }}° Ciclo
+                    </h6>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-striped">
+                        <thead>
+                          <tr>
+                            <th>Código</th>
+                            <th>Curso</th>
+                            <th>Sección</th>
+                            <th>Créditos</th>
+                            <th>Docente</th>
+                            <th>Horarios</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="seccionId in getCursosSeleccionadosPorCiclo(ciclo)" :key="seccionId">
+                            <td><span class="badge bg-dark">{{ getCursoData(seccionId).codigo }}</span></td>
+                            <td><strong>{{ getCursoData(seccionId).nombre }}</strong></td>
+                            <td>{{ getCursoData(seccionId).seccion }}</td>
+                            <td><span class="badge bg-info">{{ getCursoData(seccionId).creditos }}</span></td>
+                            <td><small>{{ getCursoData(seccionId).docente }}</small></td>
+                            <td><small>{{ getCursoData(seccionId).horarios }}</small></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </template>
+                </div>
               </div>
             </div>
           </div>
@@ -307,7 +444,9 @@
             >
               <i class="fas fa-arrow-left me-2"></i>Anterior
             </button>
-            <button type="button" class="btn btn-outline-secondary" @click="closeModal">Cancelar</button>
+            <button type="button" class="btn btn-outline-secondary" @click="closeModal">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </button>
             <button 
               v-if="step < 3" 
               type="button" 
@@ -337,7 +476,9 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Detalles de Matrícula #{{ selectedMatricula?.id.toString().padStart(6, '0') }}</h5>
+            <h5 class="modal-title">
+              <i class="fas fa-eye me-2"></i>Detalles de Matrícula #{{ selectedMatricula?.id.toString().padStart(6, '0') }}
+            </h5>
             <button type="button" class="btn-close" @click="showDetallesModal = false"></button>
           </div>
           <div class="modal-body">
@@ -345,19 +486,26 @@
               <div class="col-md-6">
                 <strong>Alumno:</strong> {{ selectedMatricula?.alumno?.usuario?.nombre }} {{ selectedMatricula?.alumno?.usuario?.apellido }}<br>
                 <strong>Código:</strong> {{ selectedMatricula?.alumno?.codigo }}<br>
+                <strong>Facultad:</strong> {{ selectedMatricula?.alumno?.escuela?.facultad?.nombre }}<br>
+                <strong>Escuela:</strong> {{ selectedMatricula?.alumno?.escuela?.nombre }}<br>
                 <strong>Periodo:</strong> {{ selectedMatricula?.periodoAcademico?.nombre }}<br>
               </div>
               <div class="col-md-6">
                 <strong>Fecha:</strong> {{ formatDate(selectedMatricula?.fechaMatricula) }}<br>
-                <strong>Tipo:</strong> {{ selectedMatricula?.tipoMatricula }}<br>
+                <strong>Tipo:</strong> 
+                <span class="badge" :class="selectedMatricula?.tipoMatricula === 'regular' ? 'bg-primary' : 'bg-warning'">
+                  {{ selectedMatricula?.tipoMatricula }}
+                </span><br>
                 <strong>Estado:</strong> 
                 <span class="badge" :class="getEstadoClass(selectedMatricula?.estado)">
                   {{ getEstadoLabel(selectedMatricula?.estado) }}
-                </span>
+                </span><br>
+                <strong>Créditos:</strong> {{ selectedMatricula?.creditosInscritos }}<br>
+                <strong>Monto:</strong> S/. {{ selectedMatricula?.montoTotal?.toFixed(2) }}
               </div>
             </div>
 
-            <h6>Cursos matriculados:</h6>
+            <h6><i class="fas fa-book me-2"></i>Cursos matriculados:</h6>
             <div class="table-responsive">
               <table class="table table-sm">
                 <thead>
@@ -365,15 +513,17 @@
                     <th>Código</th>
                     <th>Curso</th>
                     <th>Sección</th>
+                    <th>Ciclo</th>
                     <th>Créditos</th>
                     <th>Estado</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="detalle in detallesMatricula" :key="detalle.id">
-                    <td>{{ detalle.seccion?.curso?.codigo }}</td>
+                    <td><span class="badge bg-dark">{{ detalle.seccion?.curso?.codigo }}</span></td>
                     <td>{{ detalle.seccion?.curso?.nombre }}</td>
                     <td>{{ detalle.seccion?.nombre }}</td>
+                    <td><span class="badge bg-info">{{ detalle.seccion?.curso?.ciclo }}°</span></td>
                     <td>{{ detalle.seccion?.curso?.creditos }}</td>
                     <td>
                       <span class="badge" :class="detalle.estado === 'activo' ? 'bg-success' : 'bg-danger'">
@@ -383,11 +533,6 @@
                   </tr>
                 </tbody>
               </table>
-            </div>
-
-            <div class="mt-3 text-end">
-              <strong>Total créditos:</strong> {{ selectedMatricula?.creditosInscritos }}<br>
-              <strong>Monto total:</strong> S/. {{ selectedMatricula?.montoTotal?.toFixed(2) }}
             </div>
           </div>
         </div>
@@ -399,13 +544,16 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Registrar Pago</h5>
+            <h5 class="modal-title">
+              <i class="fas fa-dollar-sign me-2"></i>Registrar Pago
+            </h5>
             <button type="button" class="btn-close" @click="showPagoModal = false"></button>
           </div>
           <form @submit.prevent="savePago">
             <div class="modal-body">
               <div class="alert alert-info">
-                <strong>Monto a pagar:</strong> S/. {{ selectedMatricula?.montoTotal?.toFixed(2) }}
+                <strong>Monto a pagar:</strong> S/. {{ selectedMatricula?.montoTotal?.toFixed(2) }}<br>
+                <strong>Alumno:</strong> {{ selectedMatricula?.alumno?.usuario?.nombre }} {{ selectedMatricula?.alumno?.usuario?.apellido }}
               </div>
               <div class="mb-3">
                 <label class="form-label">Método de Pago *</label>
@@ -419,14 +567,14 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Número de Operación</label>
-                <input type="text" class="form-control" v-model="formPago.numeroOperacion">
+                <input type="text" class="form-control" v-model="formPago.numeroOperacion" placeholder="Opcional">
               </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" @click="showPagoModal = false">Cancelar</button>
               <button type="submit" class="btn btn-success" :disabled="savingPago">
                 <span v-if="savingPago" class="spinner-border spinner-border-sm me-2"></span>
-                Registrar Pago
+                <i v-else class="fas fa-check me-2"></i>Registrar Pago
               </button>
             </div>
           </form>
@@ -491,19 +639,137 @@ export default {
       }, 0)
     })
 
+    // Función para agrupar cursos por ciclo
+    const getCursosPorCiclo = computed(() => {
+      const grupos = {}
+      seccionesDisponibles.value.forEach(seccion => {
+        const ciclo = seccion.curso.ciclo
+        if (!grupos[ciclo]) {
+          grupos[ciclo] = []
+        }
+        grupos[ciclo].push(seccion)
+      })
+      return grupos
+    })
+
+    // Función para obtener los ciclos ordenados
+    const ciclosOrdenados = computed(() => {
+      return Object.keys(getCursosPorCiclo.value)
+        .map(ciclo => parseInt(ciclo))
+        .sort((a, b) => a - b)
+    })
+
+    // Función para obtener cursos seleccionados por ciclo
+    const getCursosSeleccionadosPorCiclo = (ciclo) => {
+      return seccionesSeleccionadas.value.filter(seccionId => {
+        const seccion = seccionesDisponibles.value.find(s => s.id === seccionId)
+        return seccion && seccion.curso.ciclo === ciclo
+      })
+    }
+
+    // Función para calcular el monto total con recargo extemporáneo
     const montoTotal = computed(() => {
-      const costo = form.value.tipoMatricula === 'extemporanea' ? costoCredito.value * 1.2 : costoCredito.value
+      let costo = costoCredito.value
+      if (form.value.tipoMatricula === 'extemporanea') {
+        costo = costo * 1.2 // 20% de recargo
+      }
       return creditosSeleccionados.value * costo
     })
 
+    // Función mejorada para validar si puede proceder al siguiente paso
     const canProceed = computed(() => {
       if (step.value === 1) {
-        return form.value.alumnoId && form.value.periodoAcademicoId && form.value.tipoMatricula
+        return form.value.alumnoId && 
+               form.value.periodoAcademicoId && 
+               form.value.tipoMatricula &&
+               alumnoSeleccionado.value
       } else if (step.value === 2) {
-        return seccionesSeleccionadas.value.length > 0 && creditosSeleccionados.value <= maxCreditos.value
+        return seccionesSeleccionadas.value.length > 0 && 
+               creditosSeleccionados.value <= maxCreditos.value &&
+               creditosSeleccionados.value >= 12 // Mínimo 12 créditos para matrícula regular
       }
       return true
     })
+
+    // Función para validar conflictos de horario
+    const tieneConflictoHorario = (seccionNueva) => {
+      for (const seccionId of seccionesSeleccionadas.value) {
+        const seccionExistente = seccionesDisponibles.value.find(s => s.id === seccionId)
+        if (!seccionExistente || seccionExistente.id === seccionNueva.id) continue
+        
+        // Verificar conflicto de horarios
+        for (const horarioNuevo of seccionNueva.horarios || []) {
+          for (const horarioExistente of seccionExistente.horarios || []) {
+            if (horarioNuevo.dia === horarioExistente.dia) {
+              const inicioNuevo = horarioNuevo.horaInicio
+              const finNuevo = horarioNuevo.horaFin
+              const inicioExistente = horarioExistente.horaInicio
+              const finExistente = horarioExistente.horaFin
+              
+              // Verificar solapamiento de horarios
+              if ((inicioNuevo < finExistente && finNuevo > inicioExistente)) {
+                return true
+              }
+            }
+          }
+        }
+      }
+      return false
+    }
+
+    // Función mejorada para determinar si puede seleccionar un curso
+    const puedeSeleccionarCurso = (seccion) => {
+      // Verificar si agregar esta sección excedería el límite de créditos
+      if (!seccionesSeleccionadas.value.includes(seccion.id)) {
+        const creditosConEsta = creditosSeleccionados.value + seccion.curso.creditos
+        if (creditosConEsta > maxCreditos.value) return false
+      }
+      
+      // Verificar vacantes
+      if (seccion.capacidadActual >= seccion.capacidadMaxima) return false
+      
+      // Verificar que no esté ya seleccionando otra sección del mismo curso
+      const cursoYaSeleccionado = seccionesSeleccionadas.value.some(seccionId => {
+        const seccionSeleccionada = seccionesDisponibles.value.find(s => s.id === seccionId)
+        return seccionSeleccionada && seccionSeleccionada.curso.id === seccion.curso.id
+      })
+      
+      if (cursoYaSeleccionado) return false
+      
+      // Verificar conflictos de horario
+      if (tieneConflictoHorario(seccion)) return false
+      
+      return true
+    }
+
+    // Función para obtener información detallada de un curso seleccionado
+    const getCursoData = (seccionId) => {
+      const seccion = seccionesDisponibles.value.find(s => s.id === seccionId)
+      if (!seccion) return {}
+      
+      const docente = seccion.docente?.usuario ? 
+        `${seccion.docente.usuario.nombre} ${seccion.docente.usuario.apellido}` : 
+        'Sin docente asignado'
+        
+      const horarios = seccion.horarios?.map(h => 
+        `${h.dia}: ${formatTime(h.horaInicio)}-${formatTime(h.horaFin)} (${h.aula})`
+      ).join(', ') || 'Sin horarios'
+      
+      return {
+        codigo: seccion.curso.codigo,
+        nombre: seccion.curso.nombre,
+        seccion: seccion.nombre,
+        creditos: seccion.curso.creditos,
+        docente: docente,
+        horarios: horarios
+      }
+    }
+
+    // Función para mostrar información completa del curso
+    const getCursoInfo = (seccionId) => {
+      const data = getCursoData(seccionId)
+      return `${data.codigo} - ${data.nombre} (Sección ${data.seccion}) - ${data.creditos} créditos - Prof. ${data.docente} - ${data.horarios}`
+    }
 
     const loadMatriculas = async () => {
       loading.value = true
@@ -511,6 +777,7 @@ export default {
         const response = await api.get('/matriculas')
         let data = response.data.data
 
+        // Filtrar localmente
         if (filterPeriodo.value) {
           data = data.filter(m => m.periodoAcademicoId === parseInt(filterPeriodo.value))
         }
@@ -572,20 +839,49 @@ export default {
     }
 
     const loadSeccionesDisponibles = async () => {
-      if (!form.value.periodoAcademicoId || !alumnoSeleccionado.value) return
+  if (!form.value.periodoAcademicoId || !alumnoSeleccionado.value) return
 
-      try {
-        const response = await api.get(`/secciones/periodo/${form.value.periodoAcademicoId}`)
-        // Filtrar secciones disponibles para el alumno según su plan de estudio
-        seccionesDisponibles.value = response.data.data.filter(seccion => 
-          seccion.curso.planEstudioId === alumnoSeleccionado.value.planEstudioId &&
-          seccion.activo &&
-          seccion.capacidadActual < seccion.capacidadMaxima
-        )
-      } catch (error) {
-        console.error('Error al cargar secciones:', error)
+  try {
+    console.log('Cargando secciones para:', {
+      periodoAcademicoId: form.value.periodoAcademicoId,
+      alumnoId: alumnoSeleccionado.value.id,
+      cicloActual: alumnoSeleccionado.value.cicloActual
+    })
+    
+    const response = await api.get(`/secciones/disponibles/periodo/${form.value.periodoAcademicoId}/alumno/${alumnoSeleccionado.value.id}`)
+    
+    console.log('Respuesta del servidor:', response.data)
+    
+    if (response.data.success) {
+      // Actualizar la información del alumno con más detalles
+      alumnoSeleccionado.value = response.data.data.alumno
+      seccionesDisponibles.value = response.data.data.secciones
+      periodoSeleccionado.value = response.data.data.periodoAcademico
+      
+      console.log('Secciones disponibles:', seccionesDisponibles.value.length)
+      
+      if (seccionesDisponibles.value.length === 0) {
+        console.warn('No se encontraron secciones disponibles')
+        if (response.data.data.message) {
+          alert(response.data.data.message)
+        }
       }
+    } else {
+      alert(response.data.message || 'Error al cargar secciones disponibles')
+      seccionesDisponibles.value = []
     }
+  } catch (error) {
+    console.error('Error al cargar secciones:', error)
+    console.error('Error details:', error.response?.data)
+    
+    if (error.response?.status === 404) {
+      alert('No se encontró el endpoint. Verifique que el servidor esté funcionando correctamente.')
+    } else {
+      alert('Error al cargar secciones disponibles: ' + (error.response?.data?.message || error.message))
+    }
+    seccionesDisponibles.value = []
+  }
+}
 
     const openNewMatricula = () => {
       step.value = 1
@@ -599,7 +895,12 @@ export default {
     }
 
     const onAlumnoChange = () => {
-      alumnoSeleccionado.value = alumnos.value.find(a => a.id === parseInt(form.value.alumnoId))
+      const alumno = alumnos.value.find(a => a.id === parseInt(form.value.alumnoId))
+      alumnoSeleccionado.value = alumno
+      
+      // Limpiar secciones disponibles cuando cambia el alumno
+      seccionesDisponibles.value = []
+      seccionesSeleccionadas.value = []
     }
 
     const nextStep = async () => {
@@ -613,32 +914,11 @@ export default {
     const toggleAll = () => {
       if (selectAll.value) {
         seccionesSeleccionadas.value = seccionesDisponibles.value
-          .filter(s => puedeSeleccionar(s))
+          .filter(s => puedeSeleccionarCurso(s))
           .map(s => s.id)
       } else {
         seccionesSeleccionadas.value = []
       }
-    }
-
-    const puedeSeleccionar = (seccion) => {
-      // Verificar si agregar esta sección excedería el límite de créditos
-      if (!seccionesSeleccionadas.value.includes(seccion.id)) {
-        const creditosConEsta = creditosSeleccionados.value + seccion.curso.creditos
-        if (creditosConEsta > maxCreditos.value) return false
-      }
-      
-      // Verificar vacantes
-      if (seccion.capacidadActual >= seccion.capacidadMaxima) return false
-      
-      // Aquí se podrían agregar más validaciones (prerequisitos, cruces de horario, etc.)
-      
-      return true
-    }
-
-    const getCursoInfo = (seccionId) => {
-      const seccion = seccionesDisponibles.value.find(s => s.id === seccionId)
-      if (!seccion) return ''
-      return `${seccion.curso.codigo} - ${seccion.curso.nombre} (Sección ${seccion.nombre})`
     }
 
     const saveMatricula = async () => {
@@ -730,6 +1010,7 @@ export default {
       loadMatriculas()
     }
 
+    // Función para resetear el proceso de matrícula
     const closeModal = () => {
       showModal.value = false
       step.value = 1
@@ -741,6 +1022,7 @@ export default {
       alumnoSeleccionado.value = null
       periodoSeleccionado.value = null
       seccionesSeleccionadas.value = []
+      seccionesDisponibles.value = []
       selectAll.value = false
     }
 
@@ -758,7 +1040,10 @@ export default {
       const clases = {
         pendiente: 'bg-warning',
         pagado: 'bg-success',
-        anulado: 'bg-danger'
+        anulado: 'bg-danger',
+        programado: 'bg-info',
+        en_curso: 'bg-success',
+        finalizado: 'bg-secondary'
       }
       return clases[estado] || 'bg-secondary'
     }
@@ -767,7 +1052,10 @@ export default {
       const labels = {
         pendiente: 'Pendiente',
         pagado: 'Pagado',
-        anulado: 'Anulado'
+        anulado: 'Anulado',
+        programado: 'Programado',
+        en_curso: 'En Curso',
+        finalizado: 'Finalizado'
       }
       return labels[estado] || estado
     }
@@ -787,6 +1075,7 @@ export default {
     })
 
     return {
+      // Variables reactivas
       matriculas,
       periodosAcademicos,
       periodosActivos,
@@ -815,12 +1104,21 @@ export default {
       costoCredito,
       maxCreditos,
       canProceed,
+      
+      // Funciones computadas
+      getCursosPorCiclo,
+      ciclosOrdenados,
+      getCursosSeleccionadosPorCiclo,
+      
+      // Funciones
+      puedeSeleccionarCurso,
+      getCursoInfo,
+      getCursoData,
+      tieneConflictoHorario,
       openNewMatricula,
       onAlumnoChange,
       nextStep,
       toggleAll,
-      puedeSeleccionar,
-      getCursoInfo,
       saveMatricula,
       viewDetalles,
       registrarPago,
@@ -847,5 +1145,33 @@ export default {
 
 .modal.show {
   background-color: rgba(0, 0, 0, 0.5);
+}
+
+.table-warning {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.progress {
+  border-radius: 10px;
+}
+
+.card-header {
+  border-radius: 0.375rem 0.375rem 0 0 !important;
+}
+
+.badge {
+  font-size: 0.75em;
+}
+
+.alert {
+  border-radius: 0.5rem;
+}
+
+.btn {
+  border-radius: 0.375rem;
+}
+
+.form-select, .form-control {
+  border-radius: 0.375rem;
 }
 </style>

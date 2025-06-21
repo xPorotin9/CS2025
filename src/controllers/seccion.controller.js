@@ -1,16 +1,10 @@
-const { Seccion, Curso, PeriodoAcademico, Docente, Horario, Usuario } = require('../models');
+const { Seccion, Curso, PeriodoAcademico, Docente, Horario, Usuario, Alumno, Escuela, Facultad, PlanEstudio, Matricula, Area } = require('../models');
 const { Op } = require('sequelize');
 
 // Crear una nueva sección
 const createSeccion = async (req, res) => {
   try {
-    const {
-      cursoId,
-      periodoAcademicoId,
-      docenteId,
-      nombre,
-      capacidadMaxima
-    } = req.body;
+    const { cursoId, periodoAcademicoId, docenteId, nombre, capacidadMaxima } = req.body;
 
     // Verificar que exista el curso
     const curso = await Curso.findByPk(cursoId);
@@ -70,13 +64,13 @@ const createSeccion = async (req, res) => {
       message: 'Sección creada exitosamente',
       data: seccion
     });
-  } catch (error) {
-    console.error('Error al crear sección:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error al crear la sección',
-      error: error.message
-    });
+  } catch (error) { 
+    console.error('Error al crear sección:', error); 
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error al crear la sección', 
+      error: error.message 
+    }); 
   }
 };
 
@@ -84,376 +78,536 @@ const createSeccion = async (req, res) => {
 const getAllSecciones = async (req, res) => {
   try {
     const { cursoId, periodoAcademicoId, docenteId, activo } = req.query;
-    
+
     const whereCondition = {};
-    
+
     if (cursoId) {
       whereCondition.cursoId = cursoId;
     }
-    
+
     if (periodoAcademicoId) {
       whereCondition.periodoAcademicoId = periodoAcademicoId;
     }
-    
+
     if (docenteId) {
-        whereCondition.docenteId = docenteId;
-      }
-      
-      if (activo !== undefined) {
-        whereCondition.activo = activo === 'true';
-      }
-      
-      const secciones = await Seccion.findAll({
-        where: whereCondition,
-        include: [
-          {
-            model: Curso,
-            as: 'curso',
-            attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos']
-          },
-          {
-            model: PeriodoAcademico,
-            as: 'periodoAcademico',
-            attributes: ['id', 'nombre', 'codigo']
-          },
-          {
-            model: Docente,
-            as: 'docente',
-            attributes: ['id', 'codigo', 'especialidad'],
-            include: [{
-              model: Usuario,
-              as: 'usuario',
-              attributes: ['nombre', 'apellido']
-            }]
-          }
-        ],
-        order: [
-          [{ model: Curso, as: 'curso' }, 'codigo', 'ASC'],
-          ['nombre', 'ASC']
-        ]
-      });
-      
-      return res.status(200).json({
-        success: true,
-        count: secciones.length,
-        data: secciones
-      });
-    } catch (error) {
-      console.error('Error al obtener secciones:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Error al obtener las secciones',
-        error: error.message
-      });
+      whereCondition.docenteId = docenteId;
     }
-  };
-  
-  // Obtener secciones por periodo académico
-  const getSeccionesByPeriodoAcademico = async (req, res) => {
-    try {
-      const { periodoAcademicoId } = req.params;
-      
-      const periodoAcademico = await PeriodoAcademico.findByPk(periodoAcademicoId);
-      if (!periodoAcademico) {
-        return res.status(404).json({
-          success: false,
-          message: 'Periodo académico no encontrado'
-        });
-      }
-      
-      const secciones = await Seccion.findAll({
-        where: { periodoAcademicoId },
-        include: [
-          {
-            model: Curso,
-            as: 'curso',
-            attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos']
-          },
-          {
-            model: Docente,
-            as: 'docente',
-            attributes: ['id', 'codigo'],
-            include: [{
-              model: Usuario,
-              as: 'usuario',
-              attributes: ['nombre', 'apellido']
-            }]
-          }
-        ],
-        order: [
-          [{ model: Curso, as: 'curso' }, 'ciclo', 'ASC'],
-          [{ model: Curso, as: 'curso' }, 'codigo', 'ASC'],
-          ['nombre', 'ASC']
-        ]
-      });
-      
-      return res.status(200).json({
-        success: true,
-        count: secciones.length,
-        data: secciones
-      });
-    } catch (error) {
-      console.error('Error al obtener secciones por periodo académico:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Error al obtener las secciones por periodo académico',
-        error: error.message
-      });
+    
+    if (activo !== undefined) {
+      whereCondition.activo = activo === 'true';
     }
-  };
-  
-  // Obtener secciones por curso y periodo académico
-  const getSeccionesByCursoAndPeriodo = async (req, res) => {
-    try {
-      const { cursoId, periodoAcademicoId } = req.params;
-      
-      const curso = await Curso.findByPk(cursoId);
-      if (!curso) {
-        return res.status(404).json({
-          success: false,
-          message: 'Curso no encontrado'
-        });
-      }
-      
-      const periodoAcademico = await PeriodoAcademico.findByPk(periodoAcademicoId);
-      if (!periodoAcademico) {
-        return res.status(404).json({
-          success: false,
-          message: 'Periodo académico no encontrado'
-        });
-      }
-      
-      const secciones = await Seccion.findAll({
-        where: { 
-          cursoId,
-          periodoAcademicoId,
-          activo: true
+    
+    const secciones = await Seccion.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: Curso,
+          as: 'curso',
+          attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos']
         },
-        include: [
-          {
-            model: Docente,
-            as: 'docente',
-            attributes: ['id', 'codigo'],
-            include: [{
-              model: Usuario,
-              as: 'usuario',
-              attributes: ['nombre', 'apellido']
-            }]
-          },
-          {
-            model: Horario,
-            as: 'horarios'
-          }
-        ],
-        order: [['nombre', 'ASC']]
-      });
-      
-      return res.status(200).json({
-        success: true,
-        count: secciones.length,
-        data: secciones
-      });
-    } catch (error) {
-      console.error('Error al obtener secciones por curso y periodo:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Error al obtener las secciones por curso y periodo',
-        error: error.message
-      });
-    }
-  };
-  
-  // Obtener una sección por ID
-  const getSeccionById = async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      const seccion = await Seccion.findByPk(id, {
-        include: [
-          {
-            model: Curso,
-            as: 'curso',
-            attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos', 'horasTeoricas', 'horasPracticas']
-          },
-          {
-            model: PeriodoAcademico,
-            as: 'periodoAcademico',
-            attributes: ['id', 'nombre', 'codigo', 'fechaInicio', 'fechaFin']
-          },
-          {
-            model: Docente,
-            as: 'docente',
-            attributes: ['id', 'codigo', 'especialidad', 'gradoAcademico'],
-            include: [{
-              model: Usuario,
-              as: 'usuario',
-              attributes: ['nombre', 'apellido', 'email']
-            }]
-          },
-          {
-            model: Horario,
-            as: 'horarios'
-          }
-        ]
-      });
-      
-      if (!seccion) {
-        return res.status(404).json({
-          success: false,
-          message: 'Sección no encontrada'
-        });
-      }
-      
-      return res.status(200).json({
-        success: true,
-        data: seccion
-      });
-    } catch (error) {
-      console.error('Error al obtener sección:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Error al obtener la sección',
-        error: error.message
-      });
-    }
-  };
-  
-  // Actualizar una sección
-  const updateSeccion = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const {
-        docenteId,
-        nombre,
-        capacidadMaxima,
-        activo
-      } = req.body;
-      
-      const seccion = await Seccion.findByPk(id);
-      
-      if (!seccion) {
-        return res.status(404).json({
-          success: false,
-          message: 'Sección no encontrada'
-        });
-      }
-      
-      // Verificar que exista el docente si se cambia
-      if (docenteId) {
-        const docente = await Docente.findByPk(docenteId);
-        if (!docente) {
-          return res.status(404).json({
-            success: false,
-            message: 'El docente especificado no existe'
-          });
+        {
+          model: PeriodoAcademico,
+          as: 'periodoAcademico',
+          attributes: ['id', 'nombre', 'codigo']
+        },
+        {
+          model: Docente,
+          as: 'docente',
+          attributes: ['id', 'codigo', 'especialidad'],
+          include: [{
+            model: Usuario,
+            as: 'usuario',
+            attributes: ['nombre', 'apellido']
+          }]
         }
-      }
-      
-      // Verificar que no exista una sección con el mismo nombre para el mismo curso y periodo
-      if (nombre && nombre !== seccion.nombre) {
-        const existingSeccion = await Seccion.findOne({
-          where: {
-            cursoId: seccion.cursoId,
-            periodoAcademicoId: seccion.periodoAcademicoId,
-            nombre,
-            id: { [Op.ne]: id }
-          }
-        });
-        
-        if (existingSeccion) {
-          return res.status(400).json({
-            success: false,
-            message: 'Ya existe una sección con este nombre para el curso y periodo especificados'
-          });
-        }
-      }
-      
-      // Validar capacidad máxima
-      if (capacidadMaxima && capacidadMaxima < seccion.capacidadActual) {
-        return res.status(400).json({
-          success: false,
-          message: 'La capacidad máxima no puede ser menor que la capacidad actual'
-        });
-      }
-      
-      // Actualizar la sección
-      await seccion.update({
-        docenteId: docenteId || seccion.docenteId,
-        nombre: nombre || seccion.nombre,
-        capacidadMaxima: capacidadMaxima || seccion.capacidadMaxima,
-        activo: activo !== undefined ? activo : seccion.activo
-      });
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Sección actualizada exitosamente',
-        data: seccion
-      });
-    } catch (error) {
-      console.error('Error al actualizar sección:', error);
-      return res.status(500).json({
+      ],
+      order: [
+        [{ model: Curso, as: 'curso' }, 'codigo', 'ASC'],
+        ['nombre', 'ASC']
+      ]
+    });
+    
+    return res.status(200).json({
+      success: true,
+      count: secciones.length,
+      data: secciones
+    });
+  } catch (error) {
+    console.error('Error al obtener secciones:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener las secciones',
+      error: error.message
+    });
+  }
+};
+
+// Obtener secciones por periodo académico
+const getSeccionesByPeriodoAcademico = async (req, res) => {
+  try {
+    const { periodoAcademicoId } = req.params;
+
+    const periodoAcademico = await PeriodoAcademico.findByPk(periodoAcademicoId);
+    if (!periodoAcademico) {
+      return res.status(404).json({
         success: false,
-        message: 'Error al actualizar la sección',
-        error: error.message
+        message: 'Periodo académico no encontrado'
       });
     }
-  };
-  
-  // Eliminar una sección (lógicamente)
-  const deleteSeccion = async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      const seccion = await Seccion.findByPk(id, {
-        include: [{
+    
+    const secciones = await Seccion.findAll({
+      where: { periodoAcademicoId },
+      include: [
+        {
+          model: Curso,
+          as: 'curso',
+          attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos']
+        },
+        {
+          model: Docente,
+          as: 'docente',
+          attributes: ['id', 'codigo'],
+          include: [{
+            model: Usuario,
+            as: 'usuario',
+            attributes: ['nombre', 'apellido']
+          }]
+        }
+      ],
+      order: [
+        [{ model: Curso, as: 'curso' }, 'ciclo', 'ASC'],
+        [{ model: Curso, as: 'curso' }, 'codigo', 'ASC'],
+        ['nombre', 'ASC']
+      ]
+    });
+    
+    return res.status(200).json({
+      success: true,
+      count: secciones.length,
+      data: secciones
+    });
+  } catch (error) {
+    console.error('Error al obtener secciones por periodo académico:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener las secciones por periodo académico',
+      error: error.message
+    });
+  }
+};
+
+// Obtener secciones por curso y periodo académico
+const getSeccionesByCursoAndPeriodo = async (req, res) => {
+  try {
+    const { cursoId, periodoAcademicoId } = req.params;
+
+    const curso = await Curso.findByPk(cursoId);
+    if (!curso) {
+      return res.status(404).json({
+        success: false,
+        message: 'Curso no encontrado'
+      });
+    }
+    
+    const periodoAcademico = await PeriodoAcademico.findByPk(periodoAcademicoId);
+    if (!periodoAcademico) {
+      return res.status(404).json({
+        success: false,
+        message: 'Periodo académico no encontrado'
+      });
+    }
+    
+    const secciones = await Seccion.findAll({
+      where: { 
+        cursoId,
+        periodoAcademicoId,
+        activo: true
+      },
+      include: [
+        {
+          model: Docente,
+          as: 'docente',
+          attributes: ['id', 'codigo'],
+          include: [{
+            model: Usuario,
+            as: 'usuario',
+            attributes: ['nombre', 'apellido']
+          }]
+        },
+        {
           model: Horario,
           as: 'horarios'
-        }]
-      });
-      
-      if (!seccion) {
-        return res.status(404).json({
-          success: false,
-          message: 'Sección no encontrada'
-        });
-      }
-      
-      // Verificar si tiene capacidad actual (alumnos matriculados)
-      if (seccion.capacidadActual > 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'No se puede eliminar una sección con alumnos matriculados'
-        });
-      }
-      
-      // Eliminar los horarios asociados
-      if (seccion.horarios && seccion.horarios.length > 0) {
-        await Promise.all(seccion.horarios.map(horario => horario.destroy()));
-      }
-      
-      // Desactivar la sección
-      await seccion.update({ activo: false });
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Sección eliminada exitosamente'
-      });
-    } catch (error) {
-      console.error('Error al eliminar sección:', error);
-      return res.status(500).json({
+        }
+      ],
+      order: [['nombre', 'ASC']]
+    });
+    
+    return res.status(200).json({
+      success: true,
+      count: secciones.length,
+      data: secciones
+    });
+  } catch (error) {
+    console.error('Error al obtener secciones por curso y periodo:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener las secciones por curso y periodo',
+      error: error.message
+    });
+  }
+};
+
+// Obtener una sección por ID
+const getSeccionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const seccion = await Seccion.findByPk(id, {
+      include: [
+        {
+          model: Curso,
+          as: 'curso',
+          attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos', 'horasTeoricas', 'horasPracticas']
+        },
+        {
+          model: PeriodoAcademico,
+          as: 'periodoAcademico',
+          attributes: ['id', 'nombre', 'codigo', 'fechaInicio', 'fechaFin']
+        },
+        {
+          model: Docente,
+          as: 'docente',
+          attributes: ['id', 'codigo', 'especialidad', 'gradoAcademico'],
+          include: [{
+            model: Usuario,
+            as: 'usuario',
+            attributes: ['nombre', 'apellido', 'email']
+          }]
+        },
+        {
+          model: Horario,
+          as: 'horarios'
+        }
+      ]
+    });
+    
+    if (!seccion) {
+      return res.status(404).json({
         success: false,
-        message: 'Error al eliminar la sección',
-        error: error.message
+        message: 'Sección no encontrada'
       });
     }
-  };
-  
-  module.exports = {
-    createSeccion,
-    getAllSecciones,
-    getSeccionesByPeriodoAcademico,
-    getSeccionesByCursoAndPeriodo,
-    getSeccionById,
-    updateSeccion,
-    deleteSeccion
-  };
+    
+    return res.status(200).json({
+      success: true,
+      data: seccion
+    });
+  } catch (error) {
+    console.error('Error al obtener sección:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener la sección',
+      error: error.message
+    });
+  }
+};
+
+// Actualizar una sección
+const updateSeccion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { docenteId, nombre, capacidadMaxima, activo } = req.body;
+
+    const seccion = await Seccion.findByPk(id);
+    
+    if (!seccion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sección no encontrada'
+      });
+    }
+    
+    // Verificar que exista el docente si se cambia
+    if (docenteId) {
+      const docente = await Docente.findByPk(docenteId);
+      if (!docente) {
+        return res.status(404).json({
+          success: false,
+          message: 'El docente especificado no existe'
+        });
+      }
+    }
+    
+    // Verificar que no exista una sección con el mismo nombre para el mismo curso y periodo
+    if (nombre && nombre !== seccion.nombre) {
+      const existingSeccion = await Seccion.findOne({
+        where: {
+          cursoId: seccion.cursoId,
+          periodoAcademicoId: seccion.periodoAcademicoId,
+          nombre,
+          id: { [Op.ne]: id }
+        }
+      });
+      
+      if (existingSeccion) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ya existe una sección con este nombre para el curso y periodo especificados'
+        });
+      }
+    }
+    
+    // Validar capacidad máxima
+    if (capacidadMaxima && capacidadMaxima < seccion.capacidadActual) {
+      return res.status(400).json({
+        success: false,
+        message: 'La capacidad máxima no puede ser menor que la capacidad actual'
+      });
+    }
+    
+    // Actualizar la sección
+    await seccion.update({
+      docenteId: docenteId || seccion.docenteId,
+      nombre: nombre || seccion.nombre,
+      capacidadMaxima: capacidadMaxima || seccion.capacidadMaxima,
+      activo: activo !== undefined ? activo : seccion.activo
+    });
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Sección actualizada exitosamente',
+      data: seccion
+    });
+  } catch (error) {
+    console.error('Error al actualizar sección:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al actualizar la sección',
+      error: error.message
+    });
+  }
+};
+
+// Eliminar una sección (lógicamente)
+const deleteSeccion = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const seccion = await Seccion.findByPk(id, {
+      include: [{
+        model: Horario,
+        as: 'horarios'
+      }]
+    });
+    
+    if (!seccion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sección no encontrada'
+      });
+    }
+    
+    // Verificar si tiene capacidad actual (alumnos matriculados)
+    if (seccion.capacidadActual > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se puede eliminar una sección con alumnos matriculados'
+      });
+    }
+    
+    // Eliminar los horarios asociados
+    if (seccion.horarios && seccion.horarios.length > 0) {
+      await Promise.all(seccion.horarios.map(horario => horario.destroy()));
+    }
+    
+    // Desactivar la sección
+    await seccion.update({ activo: false });
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Sección eliminada exitosamente'
+    });
+  } catch (error) {
+    console.error('Error al eliminar sección:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al eliminar la sección',
+      error: error.message
+    });
+  }
+};
+
+// Obtener secciones disponibles para matrícula por alumno
+const getSeccionesDisponiblesParaMatricula = async (req, res) => {
+  try {
+    const { periodoAcademicoId, alumnoId } = req.params;
+    
+    // Verificar que exista el periodo académico
+    const periodoAcademico = await PeriodoAcademico.findByPk(periodoAcademicoId);
+    if (!periodoAcademico) {
+      return res.status(404).json({
+        success: false,
+        message: 'Periodo académico no encontrado'
+      });
+    }
+    
+    // Obtener información completa del alumno
+    const alumno = await Alumno.findByPk(alumnoId, {
+      include: [
+        {
+          model: Usuario,
+          as: 'usuario',
+          attributes: ['nombre', 'apellido']
+        },
+        {
+          model: Escuela,
+          as: 'escuela',
+          include: [{
+            model: Facultad,
+            as: 'facultad'
+          }]
+        },
+        {
+          model: PlanEstudio,
+          as: 'planEstudio'
+        }
+      ]
+    });
+    
+    if (!alumno) {
+      return res.status(404).json({
+        success: false,
+        message: 'Alumno no encontrado'
+      });
+    }
+    
+    // Verificar si el alumno ya tiene matrícula en este periodo
+    const matriculaExistente = await Matricula.findOne({
+      where: {
+        alumnoId,
+        periodoAcademicoId
+      }
+    });
+    
+    if (matriculaExistente) {
+      return res.status(400).json({
+        success: false,
+        message: 'El alumno ya tiene una matrícula en este periodo académico'
+      });
+    }
+    
+    // Obtener cursos disponibles según el ciclo del alumno y su plan de estudio
+    // Se pueden matricular en cursos de su ciclo actual y ciclos anteriores (por si llevó cursos adelantados)
+    const cursosDisponibles = await Curso.findAll({
+      where: {
+        planEstudioId: alumno.planEstudioId,
+        ciclo: {
+          [Op.lte]: alumno.cicloActual + 1 // Puede llevar cursos de su ciclo y uno adelante
+        },
+        activo: true
+      }
+    });
+    
+    // Verificar si hay cursos disponibles
+    if (cursosDisponibles.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          alumno: {
+            id: alumno.id,
+            codigo: alumno.codigo,
+            nombre: `${alumno.usuario.nombre} ${alumno.usuario.apellido}`,
+            cicloActual: alumno.cicloActual,
+            escuela: alumno.escuela,
+            planEstudio: alumno.planEstudio
+          },
+          secciones: [],
+          periodoAcademico,
+          message: 'No hay cursos disponibles para el ciclo del alumno'
+        }
+      });
+    }
+    
+    // Obtener secciones disponibles para estos cursos
+    const secciones = await Seccion.findAll({
+      where: {
+        periodoAcademicoId,
+        activo: true,
+        cursoId: {
+          [Op.in]: cursosDisponibles.map(curso => curso.id)
+        }
+      },
+      include: [
+        {
+          model: Curso,
+          as: 'curso',
+          attributes: ['id', 'nombre', 'codigo', 'ciclo', 'creditos', 'tipo'],
+          include: [{
+            model: Area,
+            as: 'area',
+            attributes: ['id', 'codigo', 'nombre'],
+            required: false
+          }]
+        },
+        {
+          model: Docente,
+          as: 'docente',
+          attributes: ['id', 'codigo'],
+          include: [{
+            model: Usuario,
+            as: 'usuario',
+            attributes: ['nombre', 'apellido']
+          }]
+        },
+        {
+          model: Horario,
+          as: 'horarios'
+        }
+      ],
+      order: [
+        [{ model: Curso, as: 'curso' }, 'ciclo', 'ASC'],
+        [{ model: Curso, as: 'curso' }, 'codigo', 'ASC'],
+        ['nombre', 'ASC']
+      ]
+    });
+    
+    // Filtrar secciones que tengan cupo disponible
+    const seccionesConCupo = secciones.filter(seccion => 
+      seccion.capacidadActual < seccion.capacidadMaxima
+    );
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        alumno: {
+          id: alumno.id,
+          codigo: alumno.codigo,
+          nombre: `${alumno.usuario.nombre} ${alumno.usuario.apellido}`,
+          cicloActual: alumno.cicloActual,
+          escuela: alumno.escuela,
+          planEstudio: alumno.planEstudio
+        },
+        secciones: seccionesConCupo,
+        periodoAcademico
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener secciones disponibles para matrícula:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener las secciones disponibles',
+      error: error.message
+    });
+  }
+};
+
+module.exports = {
+  createSeccion,
+  getAllSecciones,
+  getSeccionesByPeriodoAcademico,
+  getSeccionesByCursoAndPeriodo,
+  getSeccionById,
+  updateSeccion,
+  deleteSeccion,
+  getSeccionesDisponiblesParaMatricula
+};

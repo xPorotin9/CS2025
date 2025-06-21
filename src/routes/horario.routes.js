@@ -163,6 +163,90 @@ router.get('/seccion/:seccionId', verifyToken, (req, res) => {
   horarioController.getHorariosBySeccion(req, res);
 });
 
+// Obtener horarios por docente
+router.get('/docente/:docenteId', verifyToken, (req, res) => {
+  // #swagger.tags = ['Horarios']
+  // #swagger.summary = 'Obtener horarios por docente'
+  // #swagger.description = 'Obtiene todos los horarios de un docente específico'
+  // #swagger.security = [{ "bearerAuth": [] }]
+  // #swagger.parameters['docenteId'] = { description: 'ID del docente' }
+  /* #swagger.responses[200] = {
+        description: 'Lista de horarios por docente obtenida exitosamente',
+        schema: {
+            success: true,
+            count: 2,
+            data: [
+                {
+                    id: 1,
+                    seccionId: 1,
+                    dia: 'lunes',
+                    horaInicio: '08:00:00',
+                    horaFin: '10:00:00',
+                    tipo: 'teoria',
+                    aula: 'A-101',
+                    createdAt: '2023-01-01T00:00:00.000Z',
+                    updatedAt: '2023-01-01T00:00:00.000Z',
+                    seccion: {
+                        id: 1,
+                        nombre: 'A',
+                        cursoId: 1,
+                        docenteId: 1
+                    }
+                },
+                {
+                    id: 4,
+                    seccionId: 3,
+                    dia: 'jueves',
+                    horaInicio: '14:00:00',
+                    horaFin: '16:00:00',
+                    tipo: 'teoria',
+                    aula: 'B-201',
+                    createdAt: '2023-01-01T00:00:00.000Z',
+                    updatedAt: '2023-01-01T00:00:00.000Z',
+                    seccion: {
+                        id: 3,
+                        nombre: 'C',
+                        cursoId: 2,
+                        docenteId: 1
+                    }
+                }
+            ]
+        }
+   } */
+  horarioController.getHorariosByDocente(req, res);
+});
+
+// Verificar conflictos de horario
+router.post('/check-conflicts', verifyToken, (req, res) => {
+  // #swagger.tags = ['Horarios']
+  // #swagger.summary = 'Verificar conflictos de horario'
+  // #swagger.description = 'Verifica si un horario tiene conflictos con otros existentes'
+  // #swagger.security = [{ "bearerAuth": [] }]
+  /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Datos del horario a verificar',
+        required: true,
+        schema: {
+            id: 0,
+            seccionId: 1,
+            dia: 'lunes',
+            horaInicio: '08:00:00',
+            horaFin: '10:00:00',
+            tipo: 'teoria',
+            aula: 'A-101'
+        }
+   } */
+  /* #swagger.responses[200] = {
+        description: 'Verificación de conflictos realizada exitosamente',
+        schema: {
+            success: true,
+            hasConflicts: false,
+            conflicts: []
+        }
+   } */
+  horarioController.checkConflicts(req, res);
+});
+
 // Obtener un horario por ID
 router.get('/:id', verifyToken, (req, res) => {
   // #swagger.tags = ['Horarios']

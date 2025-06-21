@@ -410,4 +410,89 @@ router.delete('/:id', verifyToken, (req, res) => {
   seccionController.deleteSeccion(req, res);
 });
 
+// Agregar al final de src/routes/seccion.routes.js, antes del module.exports
+
+// Obtener secciones disponibles para matrícula de un alumno específico
+router.get('/disponibles/periodo/:periodoAcademicoId/alumno/:alumnoId', verifyToken, (req, res) => {
+  // #swagger.tags = ['Secciones']
+  // #swagger.summary = 'Obtener secciones disponibles para matrícula de un alumno'
+  // #swagger.description = 'Obtiene todas las secciones disponibles para que un alumno se matricule según su ciclo actual'
+  // #swagger.security = [{ "bearerAuth": [] }]
+  // #swagger.parameters['periodoAcademicoId'] = { description: 'ID del periodo académico' }
+  // #swagger.parameters['alumnoId'] = { description: 'ID del alumno' }
+  /* #swagger.responses[200] = {
+        description: 'Lista de secciones disponibles para matrícula obtenida exitosamente',
+        schema: {
+            success: true,
+            data: {
+                alumno: {
+                    id: 1,
+                    codigo: 'ALU001',
+                    nombre: 'Juan Pérez',
+                    cicloActual: 3,
+                    escuela: {
+                        id: 1,
+                        nombre: 'Escuela de Ingeniería de Sistemas',
+                        codigo: 'EIS',
+                        facultad: {
+                            id: 1,
+                            nombre: 'Facultad de Ingeniería',
+                            codigo: 'FING'
+                        }
+                    },
+                    planEstudio: {
+                        id: 1,
+                        nombre: 'Plan de Estudios 2023',
+                        codigo: 'PE-2023'
+                    }
+                },
+                secciones: [
+                    {
+                        id: 1,
+                        nombre: 'A',
+                        capacidadMaxima: 40,
+                        capacidadActual: 15,
+                        curso: {
+                            id: 1,
+                            nombre: 'Programación I',
+                            codigo: 'PROG101',
+                            ciclo: 3,
+                            creditos: 4,
+                            tipo: 'obligatorio'
+                        },
+                        docente: {
+                            id: 1,
+                            codigo: 'DOC001',
+                            usuario: {
+                                nombre: 'María',
+                                apellido: 'García'
+                            }
+                        },
+                        horarios: [
+                            {
+                                id: 1,
+                                dia: 'lunes',
+                                horaInicio: '08:00:00',
+                                horaFin: '10:00:00',
+                                aula: 'A-101'
+                            }
+                        ]
+                    }
+                ],
+                periodoAcademico: {
+                    id: 1,
+                    nombre: 'Semestre 2023-I',
+                    codigo: '2023-1'
+                }
+            }
+        }
+   } */
+  seccionController.getSeccionesDisponiblesParaMatricula(req, res);
+});
+
+router.get('/disponibles/periodo/:periodoAcademicoId/alumno/:alumnoId', verifyToken, (req, res) => {
+  seccionController.getSeccionesDisponiblesParaMatricula(req, res);
+});
+
 module.exports = router;
+

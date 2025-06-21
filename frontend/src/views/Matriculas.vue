@@ -103,7 +103,13 @@
                   <span class="badge bg-info">{{ matricula.creditosInscritos }}</span>
                 </td>
                 <td>
-                  <strong>S/. {{ matricula.montoTotal.toFixed(2) }}</strong>
+                  <strong>
+                    S/. {{
+                      typeof matricula.montoTotal === 'number'
+                        ? matricula.montoTotal.toFixed(2)
+                        : '0.00'
+                    }}
+                  </strong>
                 </td>
                 <td>
                   <span class="badge" :class="getEstadoClass(matricula.estado)">
@@ -794,11 +800,11 @@ export default {
         }
 
         matriculas.value = data
+        loading.value = false // <- Asegura que loading se apague aquí también
       } catch (error) {
         console.error('Error al cargar matrículas:', error)
-        alert('Error al cargar matrículas')
-      } finally {
-        loading.value = false
+        alert('Error al cargar matrículas: ' + (error.response?.data?.message || error.message))
+        loading.value = false // <- Asegura que loading se apague en caso de error
       }
     }
 
@@ -921,27 +927,29 @@ export default {
       }
     }
 
-    const saveMatricula = async () => {
-      saving.value = true
-      try {
-        const data = {
-          alumnoId: parseInt(form.value.alumnoId),
-          periodoAcademicoId: parseInt(form.value.periodoAcademicoId),
-          tipoMatricula: form.value.tipoMatricula,
-          secciones: seccionesSeleccionadas.value.map(id => ({ seccionId: id }))
-        }
 
-        await api.post('/matriculas', data)
-        closeModal()
-        loadMatriculas()
-        alert('Matrícula registrada exitosamente')
-      } catch (error) {
-        console.error('Error al guardar matrícula:', error)
-        alert('Error al guardar matrícula: ' + (error.response?.data?.message || error.message))
-      } finally {
-        saving.value = false
+  const saveMatricula = async () => {
+    saving.value = true
+    try {
+      const data = {
+        alumnoId: parseInt(form.value.alumnoId),
+        periodoAcademicoId: parseInt(form.value.periodoAcademicoId),
+        tipoMatricula: form.value.tipoMatricula,
+        secciones: seccionesSeleccionadas.value.map(id => ({ seccionId: id }))
       }
+
+      await api.post('/matriculas', data)
+      await loadMatriculas() // Espera a que termine de cargar antes de cerrar el modal
+      closeModal()
+      alert('Matrícula registrada exitosamente')
+    } catch (error) {
+      console.error('Error al guardar matrícula:', error)
+      alert('Error al guardar matrícula: ' + (error.response?.data?.message || error.message))
+    } finally {
+      saving.value = false
     }
+  }
+
 
     const viewDetalles = async (matricula) => {
       selectedMatricula.value = matricula
